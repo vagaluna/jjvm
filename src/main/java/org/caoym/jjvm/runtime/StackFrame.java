@@ -1,7 +1,9 @@
-package org.caoym.jjvm;
+package org.caoym.jjvm.runtime;
 
 import com.sun.tools.classfile.ConstantPool;
-import org.caoym.jjvm.opcodes.Opcode;
+import org.caoym.jjvm.lang.JvmClass;
+import org.caoym.jjvm.lang.JvmMethod;
+import org.caoym.jjvm.opcode.OpcodeInvoker;
 
 /**
  * 栈帧
@@ -25,7 +27,7 @@ public class StackFrame {
     /**
      * 字节码
      */
-    private Opcode[] opcodes;
+    private OpcodeInvoker[] opcodes;
 
     /**
      * 程序计数器
@@ -38,15 +40,19 @@ public class StackFrame {
     private Object returnVal;
     private String returnType;
     private boolean isReturned = false;
+    private final JvmClass clazz;
+    private final JvmMethod method;
 
-    public StackFrame(ConstantPool constantPool,
-                      Opcode[] opcodes,
+    StackFrame(JvmClass clazz,JvmMethod method, ConstantPool constantPool,
+                      OpcodeInvoker[] opcodes,
                       int variables,
                       int stackSize) {
         this.constantPool = constantPool;
         this.opcodes = opcodes;
-        this.operandStack = new SlotsStack(stackSize);
-        this.localVariables = new Slots(variables);
+        this.operandStack = new SlotsStack<>(stackSize);
+        this.localVariables = new Slots<>(variables);
+        this.clazz = clazz;
+        this.method = method;
     }
 
     public Slots<Object> getLocalVariables() {
@@ -88,7 +94,15 @@ public class StackFrame {
     public int increasePC(){
         return pc++;
     }
-    public Opcode[] getOpcodes() {
+    public OpcodeInvoker[] getOpcodes() {
         return opcodes;
+    }
+
+    public JvmClass getCurrentClass() {
+        return clazz;
+    }
+
+    public JvmMethod getCurrentMethod() {
+        return method;
     }
 }

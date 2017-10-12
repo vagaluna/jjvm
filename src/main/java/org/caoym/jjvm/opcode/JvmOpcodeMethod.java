@@ -1,23 +1,31 @@
-package org.caoym.jjvm;
+package org.caoym.jjvm.opcode;
 
 import com.sun.tools.classfile.*;
-import org.caoym.jjvm.opcodes.Opcode;
+import org.caoym.jjvm.lang.JvmMethod;
+import org.caoym.jjvm.runtime.*;
 
 /**
  * 字节码方法（区别于 native 方法）
  */
 public class JvmOpcodeMethod implements JvmMethod {
 
-    private ClassFile classFile;
-    private Method method;
-    private Opcode[] opcodes;
-    private Code_attribute codeAttribute;
+    private final JvmOpcodeClass clazz;
+    private final Method method;
+    private final OpcodeInvoker[] opcodes;
+    private final Code_attribute codeAttribute;
+    private final String name;
+    private final int parameterCount;
 
-    public JvmOpcodeMethod(ClassFile classFile, Method method) {
-        this.classFile = classFile;
+
+    public JvmOpcodeMethod(JvmOpcodeClass clazz, Method method) throws ConstantPoolException, Descriptor.InvalidDescriptor {
+        this.clazz = clazz;
         this.method = method;
         codeAttribute = (Code_attribute)method.attributes.get("Code");
         opcodes = BytecodeInterpreter.parseCodes(codeAttribute.code);
+        String temp = "";
+        temp = method.getName(clazz.getClassFile().constant_pool);
+        parameterCount = method.descriptor.getParameterCount(clazz.getClassFile().constant_pool);
+        name = temp;
     }
 
     /**
@@ -28,7 +36,9 @@ public class JvmOpcodeMethod implements JvmMethod {
         // 出栈，并将返回值（如果有）推入上一个栈帧的操作数栈
 
         StackFrame frame = env.getStack().newFrame(
-                classFile.constant_pool,
+                clazz,
+                this,
+                clazz.getClassFile().constant_pool,
                 opcodes,
                 codeAttribute.max_locals,
                 codeAttribute.max_stack);
@@ -48,10 +58,22 @@ public class JvmOpcodeMethod implements JvmMethod {
             locals.set(pos++, arg, 1);
         }
 
+        // 执行方法前确保类已经初始化
+        clazz.clinit(env);
         BytecodeInterpreter.run(env);
     }
 
-    public AccessFlags getAccessFlags() {
-        return method.access_flags;
+    @Override
+    public int getParameterCount() {
+        return parameterCount;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+    public byte getCode(int pc){
+        Code_attribute codeAttribute = (Code_attribute)method.attributes.get("Code");
+        return codeAttribute.code[pc];
     }
 }

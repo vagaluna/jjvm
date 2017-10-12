@@ -1,6 +1,9 @@
 package org.caoym.jjvm;
 
-import sun.jvm.hotspot.oops.AccessFlags;
+import org.caoym.jjvm.lang.JvmClass;
+import org.caoym.jjvm.lang.JvmClassLoader;
+import org.caoym.jjvm.lang.JvmMethod;
+import org.caoym.jjvm.runtime.Env;
 
 import java.nio.file.Path;
 import java.util.Hashtable;
@@ -22,7 +25,7 @@ public class VirtualMachine {
     private Hashtable<String, JvmClass> methodArea = new Hashtable<String, JvmClass>();
 
     public VirtualMachine(Path classPath, String initialClass){
-        classLoader = new JvmClassLoader(classPath);
+        classLoader = new JvmDefaultClassLoader(classPath);
         this.initialClass = initialClass;
     }
     /**
@@ -32,17 +35,16 @@ public class VirtualMachine {
      */
     public void run(String[] args) throws Exception {
         Env env = new Env(this);
-        JvmClass clazz = findClass(initialClass);
+        JvmClass clazz = getClass(initialClass);
         //找到入口方法
         JvmMethod method = clazz.getMethod(
                 "main",
-                "([Ljava/lang/String;)V",
-                (int)(AccessFlags.JVM_ACC_STATIC|AccessFlags.JVM_ACC_PUBLIC));
+                "([Ljava/lang/String;)V");
         //执行入口方法
-        method.call(env, clazz, (Object[]) args);
+        method.call(env, null, new Object[]{args});
     }
 
-    public JvmClass findClass(String className) throws ClassNotFoundException {
+    public JvmClass getClass(String className) throws ClassNotFoundException {
         JvmClass found = methodArea.get(className);
         if(found == null){
             found = classLoader.loadClass(className);

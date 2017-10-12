@@ -1,4 +1,4 @@
-package org.caoym.jjvm;
+package org.caoym.jjvm.runtime;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
@@ -49,37 +49,20 @@ public class SlotsStack<T> {
      * 按正常出栈的顺序 pop 出全部元素
      * @return
      */
-    public T[] popAll() {
+    public ArrayList<T> multiPop(int count) {
+        if(count<=0) throw new IllegalArgumentException("count should not <= 0");
         ArrayList<T> items = new ArrayList<>();
-        while (end >0){
+        while (end >0 && count>0){
             end--;
             T entity = buffer[end];
             if(entity != null){
                 buffer[end] = null;
                 items.add(entity);
+                count --;
             }
         }
-        return (T[]) items.toArray();
+        return items;
     }
-
-    /**
-     * 按栈内顺序 pop 出全部元素
-     * @return
-     */
-    public T[] dumpAll() {
-        ArrayList<T> items = new ArrayList<>();
-
-        for (int begin = 0; begin < end; begin++){
-            T entity = buffer[begin];
-            if(entity != null){
-                buffer[begin] = null;
-                items.add(entity);
-            }
-        }
-        end = 0;
-        return (T[]) items.toArray();
-    }
-
 
     /**
      * 取出最后一个元素，但不出栈
@@ -96,5 +79,17 @@ public class SlotsStack<T> {
             }
         }
         return null;
+    }
+
+    public int getEndSize() {
+        int end = this.end;
+        while (end > 0)
+        {
+            end--;
+            if(buffer[end] != null){
+                return this.end-end;
+            }
+        }
+        return 0;
     }
 }

@@ -1,4 +1,4 @@
-package org.caoym.jjvm;
+package org.caoym.jjvm.runtime;
 
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
@@ -14,7 +14,7 @@ public class Slots<T> {
     }
 
     public void set(int pos, T entity, int size) throws IllegalArgumentException{
-        if(pos <=0 || pos+size > buffer.length){
+        if(pos <0 || pos+size > buffer.length){
             throw new IllegalArgumentException("invalid entity size "+size);
         }
         buffer[pos] = entity;

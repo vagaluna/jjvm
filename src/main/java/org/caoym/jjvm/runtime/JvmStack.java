@@ -1,28 +1,30 @@
-package org.caoym.jjvm;
+package org.caoym.jjvm.runtime;
 
 import com.sun.tools.classfile.ConstantPool;
-import org.caoym.jjvm.opcodes.Opcode;
+import org.caoym.jjvm.lang.JvmClass;
+import org.caoym.jjvm.lang.JvmMethod;
+import org.caoym.jjvm.opcode.OpcodeInvoker;
 
 /**
  * 虚拟机栈
  * 每个虚拟机线程持有一个独立的栈
  */
-public class Stack {
+public class JvmStack {
 
     private SlotsStack<StackFrame> frames = new SlotsStack<>(1024);
     private boolean running = false;
 
-    public StackFrame newFrame() {
-        StackFrame frame = new StackFrame(null, null, 0, 0);
+    public StackFrame newFrame(JvmClass clazz, JvmMethod method) {
+        StackFrame frame = new StackFrame(clazz, method, null, null, 0, 0);
         frames.push(frame, 1);
         return frame;
     }
 
-    public StackFrame newFrame(ConstantPool constantPool,
-                               Opcode[] opcodes,
+    public StackFrame newFrame(JvmClass clazz, JvmMethod method, ConstantPool constantPool,
+                               OpcodeInvoker[] opcodes,
                                int variables,
                                int stackSize) {
-        StackFrame frame = new StackFrame(constantPool, opcodes, variables, stackSize);
+        StackFrame frame = new StackFrame(clazz, method, constantPool, opcodes, variables, stackSize);
         frames.push(frame, 1);
         return frame;
     }
